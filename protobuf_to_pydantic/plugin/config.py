@@ -30,27 +30,10 @@ class SubConfigModel(BaseModel):
 def default_comment_handler(
     leading_comments: str, trailing_comments: str, config_model: "ConfigModel"
 ) -> Tuple[dict, str, str]:
-    comment_info_dict: dict = {}
-    if config_model.parse_comment:
-        leading_comments_list: List[str] = []
-        trailing_comments_list: List[str] = []
-        for container, comments in (
-            (leading_comments_list, leading_comments),
-            (trailing_comments_list, trailing_comments),
-        ):
-            for line in comments.split("\n"):
-                field_dict = get_dict_from_comment(config_model.comment_prefix, line)
-                if not field_dict:
-                    container.append(line)
-                else:
-                    comment_info_dict.update(field_dict)
-        leading_comments = "\n".join(leading_comments_list)
-        trailing_comments = "\n".join(trailing_comments_list)
-    return comment_info_dict, leading_comments, trailing_comments
+    pass
 
 
 class ConfigModel(BaseModel):
-    # output code config
     customer_import_set: Set[str] = Field(default_factory=set, description="customer import code set")
     customer_deque: Deque = Field(default_factory=deque, description="customer file content")
     code_indent: int = Field(default=4, description="Code indent")
@@ -67,7 +50,6 @@ class ConfigModel(BaseModel):
         ),
     )
 
-    # gen message config
     local_dict: dict = Field(default_factory=dict, description="Dict for local variables")
     template: Type[Template] = Field(default=Template, description="Support more templates by customizing 'Template'")
     comment_handler: Optional[Callable[[str, str, "ConfigModel"], Tuple[dict, str, str]]] = Field(
@@ -92,7 +74,6 @@ class ConfigModel(BaseModel):
         description="If true, generated IntEnum docs include protobuf enum name/value pairs",
     )
 
-    # other config
     file_descriptor_proto_to_code: Type[FileDescriptorProtoToCode] = Field(
         default=FileDescriptorProtoToCode,
         description="If you have modified the resolution rules, then you can customize FileDescriptorProtoToCode",
@@ -142,37 +123,18 @@ class ConfigModel(BaseModel):
 
         @_pydantic_adapter.model_validator(mode="after")
         def after_init(cls, values: Any) -> Any:
-            values["template_instance"] = values["template"](values["local_dict"], values["comment_prefix"])
-            return values
+            pass
 
     else:
 
         @_pydantic_adapter.model_validator(mode="after")
         def after_init(self) -> Any:
-            self.template_instance = self.template(self.local_dict, self.comment_prefix)
-            return self
+            pass
 
     @_pydantic_adapter.model_validator(mode="before")
     @classmethod
     def before_init(cls, values: Any) -> Any:
-        def _validator(_values: Any) -> dict:
-            if not isinstance(_values, SubConfigModel):
-                raise ValueError("values must be a SubConfigModel")
-            if _values.use_root_config:
-                root_dict = {k: v for k, v in values.items() if k != "pkg_config"}
-            else:
-                root_dict = None
-            return get_config_by_module(_values.module, ConfigModel, root_dict).dict()
-
-        if "pkg_config" in values:
-            values["pkg_config"] = {k: _validator(v) for k, v in values.get("pkg_config", {}).items()}
-        if "parse_comment" in values or "comment_handler" in values:
-            warning_msg = (
-                "The 'parse_comment' and 'comment_handler' configuration items are deprecated, "
-                "please use the 'comment_handler' configuration item instead"
-            )
-            warn(warning_msg, DeprecationWarning)
-        return values
+        pass
 
 
 def get_config_by_module(module: Any, config_class: Type[ConfigT], root_dict: Optional[dict] = None) -> ConfigT:

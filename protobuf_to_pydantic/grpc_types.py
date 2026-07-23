@@ -20,7 +20,6 @@ except ModuleNotFoundError:
     except ModuleNotFoundError:
 
         class RepeatedCompositeContainer(object):
-            """A Repeated scalar container"""
 
             def add(self, *args, **kwargs):  # real signature unknown
                 """Adds an object to the repeated container."""
@@ -91,7 +90,6 @@ except ModuleNotFoundError:
             __hash__ = None
 
         class RepeatedScalarContainer(object):
-            """A Repeated scalar container"""
 
             def append(self, *args, **kwargs):  # real signature unknown
                 """Appends an object to the repeated container."""

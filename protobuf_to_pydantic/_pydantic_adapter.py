@@ -17,7 +17,6 @@ if is_v1:
 
     from pydantic.typing import NoArgAnyCallable  # isort:skip
 
-    # In pydantic v1, these methods are not called
     CoreSchema = None
     core_schema = None
     GetCoreSchemaHandler = None
@@ -27,7 +26,7 @@ if is_v1:
     PydanticUndefinedType = type(PydanticUndefined)
 
     def get_model_config_value(model: Type[BaseModel], key: str) -> Any:
-        return getattr(model.Config, key)  # type: ignore[attr-defined]
+        pass
 
     def get_model_config_dict(model: Type[BaseModel]) -> dict:
         config_dict = {}
@@ -72,7 +71,7 @@ else:
     PydanticUndefinedType = type(PydanticUndefined)
 
     def get_model_config_value(model: Type[BaseModel], key: str) -> Any:
-        return model.model_config.get(key)
+        pass
 
     def get_model_config_dict(model: Type[BaseModel]) -> dict:
         return model.model_config  # type: ignore

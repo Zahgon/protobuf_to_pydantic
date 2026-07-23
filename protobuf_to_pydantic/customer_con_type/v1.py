@@ -42,11 +42,9 @@ _ignore_param_value_tz: bool = False
 
 
 def set_ignore_param_value_tz(result: bool) -> None:
-    global _ignore_param_value_tz
-    _ignore_param_value_tz = result
+    pass
 
 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Duration[timedelta] TYPE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class ConstrainedTimedelta(timedelta):
     duration_const: Optional[timedelta] = None
     duration_ge: Optional[timedelta] = None
@@ -99,7 +97,6 @@ def contimedelta(
     duration_in: Optional[Sequence[timedelta]] = None,
     duration_not_in: Optional[Sequence[timedelta]] = None,
 ) -> Type[timedelta]:
-    # use kwargs then define conf in a dict to aid with IDE type hinting
     namespace = dict(
         duration_const=duration_const,
         duration_ge=duration_ge,
@@ -112,7 +109,6 @@ def contimedelta(
     return type("ConstrainedTimedeltaValue", (ConstrainedTimedelta,), namespace)  # type: ignore
 
 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Timestamp TYPE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 TIMESTAMP_ANT_TYPE = Union[int, float, str, datetime]
 
 
@@ -177,11 +173,11 @@ class ConstrainedTimestamp(datetime):
     @classmethod
     @validate_arguments
     def validate(cls, v: datetime) -> datetime:
-        return v
+        pass
 
     @classmethod
     def ignore_value_tz(cls, v: datetime) -> datetime:
-        return v.replace(tzinfo=None)
+        pass
 
 
 def contimestamp(

@@ -62,27 +62,19 @@ class MessageOptionTypedDict(TypedDict):
 
 
 def json_to_dict(v: Union[str, dict]) -> dict:
-    if isinstance(v, str):
-        try:
-            v = json.loads(v)
-        except json.JSONDecodeError:
-            raise ValueError("JSON string is not valid JSON")
-    elif not isinstance(v, dict):
-        raise ValueError("JSON string is not a dict")
-    return v  # type: ignore[return-value]
+    pass
 
 
 if is_v1:
 
     class JsonAndDict(dict):
-        # v1 support
         @classmethod
         def __get_validators__(cls) -> Generator[Callable, None, None]:
             yield cls.validate
 
         @classmethod
         def validate(cls, v: Union[str, dict]) -> dict:
-            return json_to_dict(v)
+            pass
 
 else:
     from pydantic import BeforeValidator

@@ -7,12 +7,7 @@ from protobuf_to_pydantic.field_info_rule.types import OneOfTypedDict  # isort:s
 
 
 def to_datetime(value: Any) -> Any:
-    if not isinstance(value, datetime):
-        if isinstance(value, (list, tuple)):
-            value = [to_datetime(i) for i in value]
-        else:
-            value = datetime.fromtimestamp(value)
-    return value
+    pass
 
 
 def to_timestamp(value: Any) -> Any:
@@ -24,9 +19,6 @@ def to_timestamp(value: Any) -> Any:
     return value
 
 
-#################
-# pre validator #
-#################
 def check_one_of(cls: Any, values: tuple) -> tuple:
     """validatorValidator for supporting protobuf one_of"""
     for one_of_name, one_of_dict in getattr(cls, "_one_of_dict", {}).items():  # type: str, OneOfTypedDict
@@ -38,9 +30,6 @@ def check_one_of(cls: Any, values: tuple) -> tuple:
     return values
 
 
-##################
-# data validator #
-##################
 def in_validator(v: Any, field_name: str, field_value: Any) -> Any:
     if field_value is not None and v not in field_value:
         err_msg = f"{v} must in {field_value}"
@@ -101,9 +90,6 @@ def not_contains_validator(v: Any, field_name: str, field_value: Any) -> Any:
     return v
 
 
-####################
-# duration support #
-####################
 def duration_lt_validator(v: Any, field_name: str, field_value: Any) -> Any:
     if field_value is not None and not (v < field_value):
         raise ValueError(f"{field_name} must < {field_value}, not {v}")
@@ -146,9 +132,6 @@ def duration_not_in_validator(v: Any, field_name: str, field_value: Any) -> Any:
     return v
 
 
-#####################
-# timestamp support #
-#####################
 _now_default_factory: Callable[[], datetime] = datetime.now
 
 
@@ -256,9 +239,6 @@ def timestamp_not_in_validator(v: Any, field_name: str, field_value: Any) -> Any
     return v
 
 
-###############
-# map support #
-###############
 def map_min_pairs_validator(v: Any, field_name: str, field_value: Any) -> Any:
     if field_value is not None and len(v) < field_value:
         raise ValueError(f"{field_name} length must >= {field_value}")

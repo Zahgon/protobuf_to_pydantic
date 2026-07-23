@@ -21,7 +21,6 @@ from protobuf_to_pydantic.grpc_types import Duration, ProtobufRepeatedType, Time
 
 
 class Timedelta(timedelta):
-    """Timedelta object supporting Protobuf.Duration of pydantic.field."""
 
     @classmethod
     def __get_validators__(cls) -> Generator[Callable, None, None]:
@@ -29,13 +28,7 @@ class Timedelta(timedelta):
 
     @classmethod
     def validate(cls, v: Union[int, float, str, timedelta]) -> timedelta:
-        if isinstance(v, timedelta):
-            return v
-        elif isinstance(v, str):
-            if v.endswith("s") and v[:-1].isdigit():
-                v = v[:-1]
-            v = float(v)
-        return timedelta(seconds=v)
+        pass
 
 
 def camel_to_snake(name: str) -> str:
@@ -124,7 +117,6 @@ def get_pyproject_content(pyproject_file_path: str) -> str:
     return ""
 
 
-# flake8: noqa: C901
 def format_content(content_str: str, pyproject_file_path: str = "") -> str:
     pyproject_dict: dict = {}
     toml = None  # type: ignore
@@ -189,7 +181,6 @@ def format_content(content_str: str, pyproject_file_path: str = "") -> str:
         black_config_dict: dict = {}
         try:
             black_config_dict = {k.replace("-", "_"): v for k, v in pyproject_dict["tool"]["black"].items()}
-            # target_version param replace
             target_versions = {
                 getattr(black.TargetVersion, i.upper()) for i in black_config_dict.pop("target_version", [])
             }

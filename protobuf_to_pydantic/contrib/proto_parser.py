@@ -1,12 +1,3 @@
-# The original author hasn't updated it for a long time,
-# so fork this code and make some optimizations and bug fixes for this project
-#
-# Original project name: protoparser
-# Original project url: https://github.com/khadgarmage/protoparser
-# Original project author: khadgarmage
-#
-# feat: support optional fields
-#   https://github.com/khadgarmage/protoparser/pull/6/commits/973c0456ae360379ff4b4955c7e5ca8dcfdd1905
 import json
 from dataclasses import asdict, dataclass
 from typing import Any, Dict, List, Optional, Tuple, Union
@@ -14,7 +5,6 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from lark import Lark, Token, Transformer, Tree
 from lark.tree import ParseTree  # type: ignore
 
-# BNF doc url:https://protobuf.dev/reference/protobuf/proto3-spec/
 BNF = r"""
 OCTALDIGIT: "0..7"
 IDENT: ( "_" )* LETTER ( LETTER | DECIMALDIGIT | "_" )*
@@ -162,263 +152,62 @@ class ProtoFile(object):
 
 
 class ProtoTransformer(Transformer):
-    """Converts syntax tree token into more easily usable namedtuple objects"""
 
     @staticmethod
     def message(tokens: list) -> Message:
-        """Returns a Message namedtuple"""
-        comment: Comment = Comment("", {})
-        if len(tokens) < 3:
-            name_token, body = tokens
-        else:
-            comment, name_token, body = tokens
-        return Message(comment, name_token.value, *body)
+        pass
 
     @staticmethod
     def messagebody(
         items: List[Union[Message, Enum, Field]]
     ) -> Tuple[List[OneOfField], List[Field], Dict[str, Message], Dict[str, Enum]]:
-        """Returns a tuple of message body namedtuples"""
-        messages: Dict[str, Message] = {}
-        enums: Dict[str, Enum] = {}
-        oneofs: List[OneOfField] = []
-        fields: List[Field] = []
-        for item in items:
-            if isinstance(item, Message):
-                messages[item.name] = item
-            elif isinstance(item, Enum):
-                enums[item.name] = item
-            elif isinstance(item, Field):
-                fields.append(item)
-            elif isinstance(item, Token) and item.data.value == "oneof":
-                for oneof_item in item.children:
-                    oneofs.append(oneof_item)
-        return oneofs, fields, messages, enums
+        pass
 
     @staticmethod
     def field(tokens: list) -> Field:
-        """Returns a Field namedtuple"""
-        comment: Comment = Comment("", {})
-        type_token: Token = Token("TYPE", "")
-        field_name_token: Token = Token("FIELDNAME", "")
-        field_number_token: Token = Token("FIELDNUMBER", "")
-        for token in tokens:
-            if isinstance(token, Comment):
-                comment = token
-            elif isinstance(token, Token):
-                if token.type == "TYPE":
-                    type_token = token
-                elif token.type == "FIELDNAME":
-                    field_name_token = token
-                elif token.type == "FIELDNUMBER":
-                    field_number_token = token
-                elif token.type == "COMMENT":
-                    if not comment:
-                        comment = Comment(token.value, {})
-                    else:
-                        comment.content += token.value
-                elif token.type == "TAIL" and "//" in token.value:
-                    value = token.value.strip(";").strip()
-                    if not comment:
-                        comment = Comment(value, {})
-                    else:
-                        comment.content += value
-        return Field(
-            comment,
-            type_token.value,
-            type_token.value,
-            type_token.value,
-            field_name_token.value,
-            int(field_number_token.value),
-        )
+        pass
 
     @staticmethod
     def repeatedfield(tokens: list) -> Field:
-        """Returns a Field namedtuple"""
-        tokens = [token for token in tokens if token]
-        if len(tokens) < 2:
-            field: Field = tokens[0]
-            return field
-        else:
-            comment, field = tuple(tokens)
-            field.comment.content = comment.content + field.comment.content
-            return field
+        pass
 
     @staticmethod
     def optionalfield(tokens: list) -> Field:
-        """Returns a Field namedtuple"""
-        comment = Comment("", {})
-        if len(tokens) < 2:
-            field = tokens[0]
-        else:
-            comment, field = tuple(tokens)
-        return Field(comment, "optional", field.type, field.type, field.name, field.number)
+        pass
 
     def oneoffield(self, tokens: list) -> OneOfField:
-        """Returns a Field namedtuple"""
-        return OneOfField(**asdict(self.field(tokens)))
+        pass
 
     def oneof(self, tokens: list) -> Token:
-        """Returns a Token namedtuple"""
-        return tokens[0]
+        pass
 
     @staticmethod
     def mapfield(tokens: list) -> Field:
-        """Returns a Field namedtuple"""
-        comment = Comment("", {})
-        val_type = Token("TYPE", "")
-        key_type = Token("KEYTYPE", "")
-        fieldname = Token("MAPNAME", "")
-        fieldnumber = Token("FIELDNUMBER", "")
-        for token in tokens:
-            if isinstance(token, Comment):
-                comment = token
-            elif isinstance(token, Token):
-                if token.type == "TYPE":
-                    val_type = token
-                elif token.type == "KEYTYPE":
-                    key_type = token
-                elif token.type == "MAPNAME":
-                    fieldname = token
-                elif token.type == "FIELDNUMBER":
-                    fieldnumber = token
-                elif token.type == "COMMENT":
-                    if not comment:
-                        comment = Comment(token.value, {})
-                    else:
-                        comment.content += token.value
-                elif token.type == "TAIL" and "//" in token.value:
-                    value = token.value.strip(";").strip()
-                    if not comment:
-                        comment = Comment(value, {})
-                    else:
-                        comment.content += value
-        return Field(comment, "map", key_type.value, val_type.value, fieldname.value, int(fieldnumber.value))
+        pass
 
     @staticmethod
     def comments(tokens: list) -> Comment:
-        """Returns a Tag namedtuple"""
-        comment: str = ""
-        tags: Dict[str, Any] = {}
-        for token in tokens:
-            comment += token
-            if token.find("@") < 0:
-                continue
-            kvs = token.strip(" /\n").split("@")
-            for kv in kvs:
-                kv = kv.strip(" /\n")
-                if not kv:
-                    continue
-                tmp = kv.split("=")
-                key = tmp[0].strip(" /\n").lower()
-                if key.find(" ") >= 0:
-                    continue
-                if len(tmp) > 1:
-                    tags[key] = tmp[1].lower()
-                else:
-                    tags[key] = True
-        return Comment(comment, tags)
+        pass
 
     @staticmethod
     def enum(tokens: list) -> Enum:
-        """Returns an Enum namedtuple"""
-        comment: Comment = Comment("", {})
-        if len(tokens) < 3:
-            name, fields = tokens
-        else:
-            comment, name, fields = tokens
-        return Enum(comment, name.value, fields)
+        pass
 
     @staticmethod
     def enumbody(tokens: list) -> List[Field]:
-        """Returns a sequence of enum identifiers"""
-        enumitems: List[Field] = []
-        for tree in tokens:
-            if tree.data != "enumfield":
-                continue
-            comment: Comment = Comment("", {})
-            name: Token = Token("IDENT", "")
-            value: Token = Token("INTLIT", "")
-            for token in tree.children:
-                if isinstance(token, Comment):
-                    comment = token
-                elif isinstance(token, Token):
-                    if token.type == "IDENT":
-                        name = token
-                    elif token.type == "INTLIT":
-                        value = token
-                    elif token.type == "COMMENT":
-                        if not comment:
-                            comment = Comment(token.value, {})
-                        else:
-                            comment.content += token.value
-                    elif token.type == "TAIL" and "//" in token.value:
-                        value = token.value.strip(";").strip()
-                        if not comment:
-                            comment = Comment(value, {})
-                        else:
-                            comment.content += value
-            enumitems.append(Field(comment, "enum", "enum", "enum", name.value, value.value))
-        return enumitems
+        pass
 
     @staticmethod
     def service(tokens: list) -> Service:
-        """Returns a Service namedtuple"""
-        functions: List[RpcFunc] = []
-        name: str = ""
-        for token in tokens:
-            if token is None:
-                continue
-            if not isinstance(token, Comment):
-                if isinstance(token, RpcFunc):
-                    functions.append(token)
-                else:
-                    name = token.value
-        return Service(name, functions)
+        pass
 
     @staticmethod
     def rpc(tokens: List) -> RpcFunc:
-        """Returns a RpcFunc namedtuple"""
-        uri: str = ""
-        name: Token = Token("RPCNAME", "")
-        in_type: Token = Token("MESSAGETYPE", "")
-        out_type: Token = Token("MESSAGETYPE", "")
-
-        for token in tokens:
-            if token is None:
-                continue
-            if isinstance(token, Token):
-                if token.type == "RPCNAME":
-                    name = token
-                elif token.type == "MESSAGETYPE":
-                    if in_type:
-                        out_type = token
-                    else:
-                        in_type = token
-            elif not isinstance(token, Comment):
-                option_token = token
-                uri = option_token.children[0].value
-        return RpcFunc(name.value, in_type.value, out_type.value, uri.strip('"'))
+        pass
 
 
 def _recursive_to_dict(obj: Any) -> Dict[str, Any]:
-    _dict: Dict[str, Any] = {}
-
-    if hasattr(obj, "__dataclass_fields__"):
-        node: Dict[str, Any] = asdict(obj)
-        for item in node:
-            if isinstance(node[item], list):  # Process as a list
-                _dict[item] = [_recursive_to_dict(x) for x in (node[item])]
-            elif isinstance(node[item], tuple):  # Process as a NamedTuple
-                _dict[item] = _recursive_to_dict(node[item])
-            elif isinstance(node[item], dict):
-                for k in node[item]:
-                    if isinstance(node[item][k], tuple):
-                        node[item][k] = _recursive_to_dict(node[item][k])
-                _dict[item] = node[item]
-            else:  # Process as a regular element
-                _dict[item] = node[item]
-    return _dict
+    pass
 
 
 def parse_from_file(file: str) -> Optional[ProtoFile]:
@@ -466,12 +255,8 @@ def parse(data: str) -> ProtoFile:
 
 
 def serialize2json(data: str) -> str:
-    return json.dumps(_recursive_to_dict(parse(data)))
+    pass
 
 
 def serialize2json_from_file(file: str) -> Optional[str]:
-    with open(file, "r") as f:
-        data = f.read()
-    if data:
-        return json.dumps(_recursive_to_dict(parse(data)))
-    return None
+    pass
